@@ -60,7 +60,7 @@ class Resource[T](tmpl: ResourceTemplate[T],
 
   def insert(json: JsValue): Promise[ResourceResult[T]] = {
     reader.reads(json).fold(
-      invalid = { (o, e, g) => Promise.pure(ResourceValidationError(e.map{ case(path, errors) => errors.map( err => ResourceErrorMsg(path.toJsonString, err.message, err.args:_*) ) }.flatten)) },
+      invalid = { e => Promise.pure(ResourceValidationError(e.map{ case(path, errors) => errors.map( err => ResourceErrorMsg(path.toJsonString, err.message, err.args:_*) ) }.flatten)) },
       valid = { s => 
         tmpl.insert(s).map( _.foldOp(
           error = { e => ResourceOpError(e.map( e => ResourceErrorMsg(e.key, e.message, e.args:_*) )) },
@@ -79,12 +79,12 @@ class Resource[T](tmpl: ResourceTemplate[T],
     tmpl.find(json)
   }
 
-  def checking[A](c: (JsPath, Reads[A]))(implicit v:Reads[A]) = {
+  def checking[A](c: (JsPath, Format[A]))(implicit v: Format[A]) = {
     new Resource(
       this.tmpl, 
       this.inputTransform, 
       this.outputTransform,
-      this.queryTransform)(JsValidator(c) andThen this.reader, this.writer)
+      this.queryTransform)(JsTupler(c) andThen this.reader, this.writer)
   }
   
   def transformInput( f: T => T ) = new Resource(this.tmpl, f, this.outputTransform, this.queryTransform)
@@ -95,7 +95,7 @@ class Resource[T](tmpl: ResourceTemplate[T],
 object Resource {
   def apply[T](tmpl: ResourceTemplate[T])(implicit fmt: Format[T]) = new Resource[T](tmpl)
 
-  def apply[T, A1](c1: (JsPath, Reads[A1]))
+  def apply[T, A1](c1: (JsPath, Format[A1]))
                   (apply: Function1[A1, T])(unapply: Function1[T, Option[A1]])
                   (tmpl: ResourceTemplate[T])
                   (implicit fmtA1: Format[A1]): Resource[T] = {
@@ -104,7 +104,7 @@ object Resource {
     new Resource[T](tmpl)                
   }
 
-  def apply[T, A1, A2](c1: (JsPath, Reads[A1]), c2: (JsPath, Reads[A2]))
+  def apply[T, A1, A2](c1: (JsPath, Format[A1]), c2: (JsPath, Format[A2]))
                   (apply: Function2[A1, A2, T])(unapply: Function1[T, Option[(A1, A2)]])
                   (tmpl: ResourceTemplate[T])
                   (implicit fmtA1: Format[A1], fmtA2: Format[A2]): Resource[T] = {

@@ -10,6 +10,13 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.8" % "test"  
 )
 
+resolvers ++= Seq(
+//	"Typesafe repository snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
+//	"Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/"
+	"mandubian-mvn snapshots" at "https://github.com/mandubian/mandubian-mvn/raw/master/snapshots",
+	"mandubian-mvn releases" at "https://github.com/mandubian/mandubian-mvn/raw/master/releases"
+)
+
 publishTo <<=  version { (v: String) => 
     val base = "../../workspace_mandubian/mandubian-mvn"
 	if (v.trim.endsWith("SNAPSHOT")) 
