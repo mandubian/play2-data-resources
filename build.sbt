@@ -10,12 +10,13 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.8" % "test"  
 )
 
-resolvers += Resolver.file("local repository", file("/Volumes/PVO/workspaces/workspace_zen/Play20/repository/local"))(Resolver.ivyStylePatterns)
+publishTo <<=  version { (v: String) => 
+    val base = "../../workspace_mandubian/mandubian-mvn"
+	if (v.trim.endsWith("SNAPSHOT")) 
+		Some(Resolver.file("snapshots", new File(base + "/snapshots")))
+	else Some(Resolver.file("releases", new File(base + "/releases")))
+}
 
-//resolvers += "Typesafe repository snapshots" at "http://repo.typesafe.com/typesafe/snapshots/"
+publishMavenStyle := true
 
-//resolvers += "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/" 
-
-//resolvers += "Scala-Tools" at "https://oss.sonatype.org/content/groups/scala-tools/"
-
-//resolvers += "Scala-Tools-Snapshot" at "https://oss.sonatype.org/content/repositories/snapshots/"
+publishArtifact in Test := false
